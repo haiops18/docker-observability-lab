@@ -1,0 +1,48 @@
+groups:
+  - name: docker-observability-lab.rules
+    interval: 30s
+    rules:
+      - alert: ExporterDown
+        expr: up{job=~"node-exporter|cadvisor"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Exporter {{ $labels.job }} is down"
+          description: "Prometheus cannot scrape {{ $labels.job }} at {{ $labels.instance }}."
+
+      - alert: HighHostCPUUsage
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High host CPU usage"
+          description: "CPU usage on {{ $labels.instance }} is above 85% for 5 minutes."
+
+      - alert: HighHostMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High host memory usage"
+          description: "Memory usage on {{ $labels.instance }} is above 85% for 5 minutes."
+
+      - alert: HighHostDiskUsage
+        expr: (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|aufs"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|aufs"})) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High host disk usage"
+          description: "Disk usage on {{ $labels.instance }} mount {{ $labels.mountpoint }} is above 85%."
+
+      - alert: ContainerDown
+        expr: time() - container_last_seen{name!=""} > 60
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} is not reporting"
+          description: "cAdvisor has not seen container {{ $labels.name }} for more than 60 seconds."

@@ -1,0 +1,11 @@
+.env
+*.env
+secrets/
+config/prometheus/web.yml
+config/alertmanager/web.yml
+data/
+prometheus/prometheus_data/
+*.log
+*.pid
+*.tmp
+.DS_Store
